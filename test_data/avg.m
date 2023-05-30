@@ -20,6 +20,5 @@ function out = avg(in1, in2, in3)
 %   05/02/2018 - mmyers
 %       * Initial implementation
 %
-
-out = 1
+out = (in1 + in2 + in3)/3;
 end

@@ -10,7 +10,9 @@ from .ast_utils import extract_function_signature_info
 
 
 class DocumentationExtractor(AST_Visitor):
-
+    """
+    Parses a Matlab file and extracts documentation comment(s) and additional data.
+    """
     def __init__(self, file_path: str):
         self.mode = DocType.UNKNOWN
         self.doc = []
@@ -44,29 +46,30 @@ class DocumentationExtractor(AST_Visitor):
 
     def extract_function_documentation(self, node: Function_Definition) -> DocumentationResult:
         assert isinstance(node, Function_Definition)
-        # function_token = self.find_token_for_node(node)
-        # if function_token is None:
-        #     return DocumentationResult.empty()
+        function_token = node.t_fun
+        if function_token is None:
+            return DocumentationResult.empty()
         signature = extract_function_signature_info(node.n_sig)
-        doc_comments = node.n_docstring.l_comments
-        doc_texts = []
-        for comment in doc_comments:
-            doc_texts.append(comment.value)
 
-        # tokens = self.tbuf.tokens
-        # start_index = self.find_index_of_first_token_in_line(function_token.location.line + 1)
-        # for index in range(start_index, len(tokens)):
-        #     if tokens[index].kind == "COMMENT":
-        #         doc_comment.append(tokens[index].raw_text)
+        tokens = self.tbuf.tokens
+        index = self.find_index_of_first_token_in_line(function_token.location.line + 1)
+        doc_comment = []
+        while index < len(tokens) and tokens[index].kind == "COMMENT":
+            # We need to preserve the indents in the comments since they might be important later
+            # Therefore, we're storing the raw_text instead of just the value of the token
+            doc_comment.append(str(tokens[index].raw_text))
+            index += 1
+            if index < len(tokens) and tokens[index].kind == "NEWLINE":
+                index += 1
+
         return FunctionDocumentationResult(
             type=DocType.FUNCTION,
             signature=signature,
-            doc_comment="\n".join(doc_texts)
+            doc_comment="\n".join(doc_comment)
         )
 
     def extract_class_documentation(self, node) -> DocumentationResult:
-        return DocumentationResult.empty()
-
+        raise NotImplementedError
 
     def find_index_of_first_token_in_line(self, n: int) -> int:
         """
@@ -94,17 +97,3 @@ def extract_documentation(file_path: str):
     visitor = DocumentationExtractor(root, tbuf)
     root.visit(None, visitor, "Root")
     return visitor.result
-
-# if __name__ == '__main__':
-#     filename = "/home/patrick/Workspace/cbs/hMRI-toolbox/hmri_create_FieldMap.m"
-#     with open(filename) as f:
-#         text = f.read()
-#     mh = E.Message_Handler("trace")
-#     mh.register_file(filename)
-#     lexer = L.MATLAB_Lexer(miss_hit_core.m_language.MATLAB_2021a_Language(), mh, text, filename)
-#     tbuf = L.Token_Buffer(lexer, Config())
-#     slp = P.MATLAB_Parser(mh, tbuf, Config())
-#     root = slp.parse_file()
-#     parse_docstrings(mh, Config(), root, tbuf)
-#     root.visit(None, DocumentationExtractor(root, tbuf), "Root")
-
