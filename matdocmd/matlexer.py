@@ -8,7 +8,7 @@ class CommentType(Enum):
     """
     We need to differentiate what type of comment we're actually processing.
     It's important because doc comments of functions will have a different structure than
-    e.g. comments for class methods.
+    e.g., comments for class methods.
     """
     FUNCTION = 0
     CLASS = 1
@@ -43,7 +43,7 @@ class MatLexer:
     """
     Tokenizes each line of a MATLAB documentation comment.
     Each line will be wrapped in a `Token` to add additional information.
-    Later, the stream of tokens will be processed into Markdown.
+    Later the stream of tokens will be processed into Markdown.
     """
     bullet_regex = re.compile("%([ \t]*)[-*](.*)$")
     section_regex = re.compile("%([ \t]*)([A-Z][a-z]+):$")
